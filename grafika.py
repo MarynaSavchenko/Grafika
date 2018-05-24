@@ -1,8 +1,12 @@
 from PIL import Image, ImageDraw, ImageColor
 import json
 import sys
+import string
+VARS = string.ascii_lowercase
 
 fg_color = "black"
+hex = '0123456789abcdefABCDEF'
+Palette = {}
 
 
 def main(argv):
@@ -23,6 +27,8 @@ def main(argv):
     if "fg_color" in Screen:
         global fg_color
         fg_color = Screen["fg_color"]
+    global Palette
+    Palette = json_data["Palette"] 
     image = set_screen(Screen)
     Figures = json_data["Figures"]  
     
@@ -52,6 +58,9 @@ def draw_point(image,figure):
         return 0 
     if "color" in figure:
         color = perform_color(figure["color"])
+        if color == False:
+            print("Wrong color for drawing point in figure: \n", figure, "\n")
+            return 0
         try:
             draw.point((x,y), color)
         except ValueError:
@@ -83,6 +92,11 @@ def draw_square(image,figure):
         color = perform_color(figure["color"])
     else:
         color = None
+        
+    if color == False:
+        print("Wrong color for drawing square in figure: \n", figure, "\n")
+        return 0
+    
     if "radius" in figure:
         r = figure["radius"]
         if color == None:
@@ -127,6 +141,9 @@ def draw_polygon(image,figure):
         return 0
     if "color" in figure:
         color = perform_color(figure["color"])
+        if color == False:
+            print("Wrong color for drawing polygon in figure: \n", figure, "\n")
+            return 0
         try:
             draw.polygon(new_points, outline = color)
         except ValueError:
@@ -165,6 +182,9 @@ def draw_rectangle(image,figure):
         return 0 
     if "color" in figure:
         color = perform_color(figure["color"])
+        if color == False:
+            print("Wrong color for drawing rectangle in figure: \n", figure, "\n")
+            return 0
         try:
             draw.rectangle([(x,y),(x+width,y+height)],outline = color)
         except ValueError:
@@ -198,10 +218,46 @@ def draw_figure(image, figure):
     
 def perform_color(color):
 
-    if color[0]=="(":
-        color = "rgb" + color
+    
+    if color[0]=="#" and len(color)==7:
+    
+        for i in color[1:]:
         
-    return color
+            if i in hex:
+                continue
+            else:
+                 return False
+                 
+        return color
+        
+    elif color[0] == "(" and color[len(color)-1] == ")":
+    
+        tmp = color[1:-1].split(",")
+        if len(tmp) == 3:
+        
+            for i in tmp:
+            
+                if int(i) >= 0 and int(i) < 256:
+                    continue
+                else:
+                    return False
+            return "rgb" + color
+        else:
+            return False
+            
+    elif color in Palette:
+        return Palette[color]
+        
+    else:
+        for i in color:
+            if i in VARS:
+                continue
+            else:
+                return False
+        return color
+        
+        
+        
     
 def set_screen(Screen):
 
