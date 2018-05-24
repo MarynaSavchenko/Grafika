@@ -13,11 +13,16 @@ def main(argv):
     if len(sys.argv)==4 and sys.argv[2]!="-o":
         printf("Wrong format of args\n")
         sys.exit()
-    with open(sys.argv[1]) as file:
-        json_data = json.load(file)
-    Screen = json_data["Screen"]
-    global fg_color
-    fg_color = Screen["fg_color"]
+    with open(sys.argv[1]) as file: 
+        try:
+            json_data = json.load(file)
+            Screen = json_data["Screen"]
+        except ValueError:
+            print("Wrong format of JSON\n")
+            return False
+    if "fg_color" in Screen:
+        global fg_color
+        fg_color = Screen["fg_color"]
     image = set_screen(Screen)
     Figures = json_data["Figures"]  
     
@@ -47,9 +52,17 @@ def draw_point(image,figure):
         return 0 
     if "color" in figure:
         color = perform_color(figure["color"])
-        draw.point((x,y), color)
+        try:
+            draw.point((x,y), color)
+        except ValueError:
+            print("Wrong arguments for drawing point in figure: \n", figure, "\n")
+            return 0
     else:
-        draw.point((x,y,),fg_color)
+        try:
+            draw.point((x,y,),fg_color)
+        except ValueError:
+            print("Wrong arguments for drawing point in figure: \n", figure, "\n")
+            return 0
     return image
     
 
@@ -73,15 +86,31 @@ def draw_square(image,figure):
     if "radius" in figure:
         r = figure["radius"]
         if color == None:
-            draw.ellipse([(x-r,y-r),(x+r, y+r)], outline = fg_color)
+            try:
+                draw.ellipse([(x-r,y-r),(x+r, y+r)], outline = fg_color)
+            except ValueError:
+                print("Wrong arguments for drawing circle in figure: \n", figure, "\n")
+                return 0
         else:
-            draw.ellipse([(x-r,y-r),(x+r, y+r)], outline = color)
+            try:
+                draw.ellipse([(x-r,y-r),(x+r, y+r)], outline = color)
+            except ValueError:
+                print("Wrong arguments for drawing circle in figure: \n", figure, "\n")
+                return 0
     elif "size" in figure:
         s = figure["size"]
         if color == None:
-            draw.polygon([(x,y), (x,y+s), (x+s,y+s), (x+s,y)], outline = fg_color)
+            try:
+                draw.polygon([(x,y), (x,y+s), (x+s,y+s), (x+s,y)], outline = fg_color)
+            except ValueError:
+                print("Wrong arguments for drawing square in figure: \n", figure, "\n")
+                return 0
         else:
-            draw.polygon([(x,y), (x,y+s), (x+s,y+s), (x+s,y)], outline = color)
+            try:
+                draw.polygon([(x,y), (x,y+s), (x+s,y+s), (x+s,y)], outline = color)
+            except ValueError:
+                print("Wrong arguments for drawing square in figure: \n", figure, "\n")
+                return 0
     else:
         print("There is no radius or size for square in figure: \n", figure, "\n")
         return 0
@@ -98,9 +127,17 @@ def draw_polygon(image,figure):
         return 0
     if "color" in figure:
         color = perform_color(figure["color"])
-        draw.polygon(new_points, outline = color)
+        try:
+            draw.polygon(new_points, outline = color)
+        except ValueError:
+            print("Wrong arguments for drawing polygon in figure: \n", figure, "\n")
+            return 0
     else:
-        draw.polygon(new_points, outline = fg_color)
+        try:
+            draw.polygon(new_points, outline = fg_color)
+        except ValueError:
+            print("Wrong arguments for drawing polygon in figure: \n", figure, "\n")
+            return 0
     return image
     
 def draw_rectangle(image,figure):
@@ -128,9 +165,17 @@ def draw_rectangle(image,figure):
         return 0 
     if "color" in figure:
         color = perform_color(figure["color"])
-        draw.rectangle([(x,y),(x+width,y+height)],outline = color)
+        try:
+            draw.rectangle([(x,y),(x+width,y+height)],outline = color)
+        except ValueError:
+            print("Wrong arguments for drawing rectangle in figure: \n", figure, "\n")
+            return 0
     else:
-        draw.rectangle([(x,y),(x+width,y+height)],outline = fg_color)
+        try:
+            draw.rectangle([(x,y),(x+width,y+height)],outline = fg_color)
+        except ValueError:
+            print("Wrong arguments for drawing rectangle in figure: \n", figure, "\n")
+            return 0
    
     return image
     
@@ -152,12 +197,14 @@ def draw_figure(image, figure):
         return 0
     
 def perform_color(color):
+
     if color[0]=="(":
         color = "rgb" + color
+        
     return color
     
 def set_screen(Screen):
-    global image
+
     image = Image.new('RGBA', (Screen["width"], Screen["height"]),Screen["bg_color"])
     return image
     
